@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "chess.h"
+#include <chess.h>
 #define WIDTH 8
 #define LENGTH 8
 
@@ -316,20 +316,3 @@ void backend_field(char field[][WIDTH], char backend[][WIDTH], int turn_status)
     }
 }
 
-int main()
-{
-    char backend[LENGTH][WIDTH];
-    char buffer[16];
-    FILE *moves = fopen("moves.txt", "w");
-    create_field(field);
-    create_field(backend);
-
-    while(1){
-        show_field(field);
-        move(buffer, moves);
-        if (move_proccess(moves, buffer) == 0){
-            backend_field(field, backend, 0);
-        }
-        backend_field(field, backend, 1);
-    }
-}

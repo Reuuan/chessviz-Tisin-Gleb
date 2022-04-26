@@ -1,10 +1,12 @@
 #include <stdio.h>
 #define WIDTH 8
 #define LENGTH 8
+
+char field[LENGTH][WIDTH];
 void create_field(char field[][WIDTH]);
 void show_field(char field[][WIDTH]);
 void move(char buffer[], FILE *moves);
-void move_process(FILE *moves , char buffer[]);
+int move_proccess(FILE *moves , char buffer[]);
 unsigned int number(char symbol);
 unsigned int letter(char symbol);
 void move_knight(char field[][WIDTH], char buffer[], int cur_sym);
