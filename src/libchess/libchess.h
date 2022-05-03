@@ -5,8 +5,8 @@
 char field[LENGTH][WIDTH];
 void create_field(char field[][WIDTH]);
 void show_field(char field[][WIDTH]);
-void move(char buffer[], FILE *moves);
-int move_proccess(FILE *moves , char buffer[]);
+void move(char buffer[]);
+int move_proccess(char buffer[]);
 unsigned int number(char symbol);
 unsigned int letter(char symbol);
 void move_knight(char field[][WIDTH], char buffer[], int cur_sym);
