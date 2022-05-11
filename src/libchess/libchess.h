@@ -14,7 +14,7 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym);
 int move_king(char field[][WIDTH], char buffer[], int cur_sym);
 int move_rock(char field[][WIDTH], char buffer[], int cur_sym);
 int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn);
-char type_of_move(char type);
+int type_of_move(char buffer[], int cur_sym);
 int is_correct_figure(char field[][WIDTH], char buffer[], int cur_sym, char figure);
 int is_pawn(char field[][WIDTH], char buffer[], int cur_sym);
 int black_turn(char buffer[]);

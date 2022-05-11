@@ -68,7 +68,8 @@ int move_proccess(char field[][WIDTH])
         }
         else
         {
-            cur_sym = black_turn(buffer);
+            if ((cur_sym = black_turn(buffer)) == -1)
+                return 0;
         }
         if (is_pawn(field, buffer, cur_sym) == 1)
         {
@@ -85,6 +86,42 @@ int move_proccess(char field[][WIDTH])
     return 1;
 }
 
+// 2 - silence move; 1 - with attack; 0 mistake
+int type_of_move(char buffer[], int cur_sym)
+{
+    // cur = 1
+    if (buffer[cur_sym + 2] == 'x')
+    {
+        return 1;
+    }
+    else if (buffer[cur_sym + 2] == '-')
+    {
+        return 2;
+    }
+    else
+        return 0;
+}
+
+int proccess_type_of_move(char field[][WIDTH], int cur_sym, char buffer[])
+{
+    if (type_of_move(buffer, cur_sym) == 1 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] == ' '))
+    {
+        puts("Ошибка: Ход с атакой, но нет взятия");
+        return -1;
+    }
+    else if (type_of_move(buffer, cur_sym) == 2 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' '))
+    {
+        puts("Ошибка: Тихий ход, но есть взятие");
+        return -1;
+    }
+    else if (type_of_move(buffer, cur_sym) == 0)
+    {
+        puts("Неккоректный ввод взятия");
+        return -1;
+    }
+    return 1;
+}
+
 int is_pawn(char field[][WIDTH], char buffer[], int cur_sym)
 {
     if (buffer[cur_sym] >= 'a' && buffer[cur_sym] <= 'h')
@@ -94,7 +131,7 @@ int is_pawn(char field[][WIDTH], char buffer[], int cur_sym)
             return 1;
         }
     }
-    return 0;
+    return -1;
 }
 
 int black_turn(char buffer[])
@@ -105,7 +142,7 @@ int black_turn(char buffer[])
             return i + 1;
     }
     puts("Ошибка: Нет хода черных");
-    return 0;
+    return -1;
 }
 
 int is_right_field_range(char field[][WIDTH], char buffer[], int cur_sym)
@@ -113,7 +150,7 @@ int is_right_field_range(char field[][WIDTH], char buffer[], int cur_sym)
     if (number(buffer[cur_sym + 4]) >= LENGTH || letter(buffer[cur_sym + 3]) >= WIDTH)
     {
         puts("Ошибка: Выход за диапазон");
-        return 0;
+        return -1;
     }
     return 1;
 }
@@ -123,7 +160,6 @@ unsigned int number(char symbol)
     unsigned int result = (unsigned int)symbol - 49;
     if (result > 7)
     {
-        puts("Incorrect number");
         return 404;
     }
     return result;
@@ -134,7 +170,6 @@ unsigned int letter(char symbol)
     unsigned int result = (unsigned int)symbol - 97;
     if (result > 7)
     {
-        puts("Incorrect letter");
         return 404;
     }
     return result;
@@ -150,7 +185,7 @@ int is_correct_figure(char field[][WIDTH], char buffer[], int cur_sym, char figu
     else
     {
         puts("Ошибка несоответсвие фигур");
-        return 0;
+        return -1;
     }
 }
 
@@ -161,42 +196,51 @@ int move_pawn(char field[][WIDTH], char buffer[], int cur_sym)
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
 
+    if (type_of_move(buffer, cur_sym))
+    {
+        
+    }
+    
     if (figure == 'P')
     {
-        if (abs_num == 2 && white_pawns_first_move[letter(buffer[cur_sym])] == 0)
+        if (abs_num == 2 && white_pawns_first_move[letter(buffer[cur_sym])] == 0 &&\
+            (field[number(buffer[cur_sym + 1]) + 1][letter(buffer[cur_sym])] == ' ') &&\
+            (field[number(buffer[cur_sym + 1]) + 2][letter(buffer[cur_sym])] == ' '))
         { // for white pawn
             white_pawns_first_move[letter(buffer[cur_sym])]++;
             field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
             field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
         }
-        else if (abs_num == 1)
+        else if (abs_num == 1 && (field[number(buffer[cur_sym + 1]) + 1][letter(buffer[cur_sym])] == ' ') )
         {
             field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
             field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
         }
         else
         {
-            puts("Ошибка");
-            return 0;
+            puts("Ошибка: Неправильный ход пешки");
+            return -1;
         }
     }
     else if (figure == 'p')
     {
-        if (abs_num == 2 && black_pawns_first_move[letter(buffer[cur_sym])] == 0)
+        if (abs_num == 2 && black_pawns_first_move[letter(buffer[cur_sym])] == 0 &&\
+            (field[number(buffer[cur_sym + 1]) + 1][letter(buffer[cur_sym])] == ' ') &&\
+            (field[number(buffer[cur_sym + 1]) + 2][letter(buffer[cur_sym])] == ' '))
         { // for black pawn
             black_pawns_first_move[letter(buffer[cur_sym])]++;
             field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
             field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
         }
-        else if (abs_num == 1)
+        else if (abs_num == 1 && (field[number(buffer[cur_sym + 1]) + 1][letter(buffer[cur_sym])] == ' ') )
         {
             field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
             field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
         }
         else
         {
-            puts("Ошибка");
-            return 0;
+            puts("Ошибка: Неправильный ход пешки");
+            return -1;
         }
     }
     return 1;
@@ -210,13 +254,15 @@ int move_knight(char field[][WIDTH], char buffer[], int cur_sym)
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
     if ((abs_let == 2 && abs_num == 1) || (abs_let == 1 && abs_num == 2))
     {
+        if (proccess_type_of_move(field, cur_sym, buffer) == -1)
+            return -1;
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
         field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
     else
     {
         printf("Некорректный ход");
-        return 0;
+        return -1;
     }
     return 1;
 }
@@ -278,13 +324,17 @@ int move_bishop(char field[][WIDTH], char buffer[], int cur_sym)
                 }
             }
         }
+
+        if (proccess_type_of_move(field, cur_sym, buffer) == -1)
+            return -1;
+
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
         field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
     else
     {
         printf("Некорректный ход");
-        return 0;
+        return -1;
     }
     return 1;
 }
@@ -298,7 +348,7 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
 
     int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
     int direction_let = letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]);
-    if (abs_num == abs_let) //bishop
+    if (abs_num == abs_let) // bishop
     {
         if (direction_let > 0 && direction_num > 0)
         {
@@ -344,7 +394,9 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
                 }
             }
         }
-    }else if((abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0)){ //rock
+    }
+    else if ((abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0))
+    { // rock
         if (direction_num > 0)
         {
             for (int i = 1; i <= abs_num; i++)
@@ -390,7 +442,7 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
             }
         }
     }
-    else if (abs_num <= 1 && abs_let <= 1) //king
+    else if (abs_num <= 1 && abs_let <= 1) // king
     {
         if (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' ')
         {
@@ -401,8 +453,12 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
     else
     {
         printf("Некорректный ход");
-        return 0;
+        return -1;
     }
+
+    if (proccess_type_of_move(field, cur_sym, buffer) == -1)
+        return -1;
+
     field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
     field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     return 1;
@@ -421,6 +477,10 @@ int move_king(char field[][WIDTH], char buffer[], int cur_sym)
             puts("Ошибка на пути фигуры");
             return -1;
         }
+
+        if (proccess_type_of_move(field, cur_sym, buffer) == -1)
+            return -1;
+
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
         field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
@@ -486,6 +546,10 @@ int move_rock(char field[][WIDTH], char buffer[], int cur_sym)
                 }
             }
         }
+
+        if (proccess_type_of_move(field, cur_sym, buffer) == -1)
+            return -1;
+
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
         field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
@@ -507,29 +571,29 @@ int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn)
     else
     {
         if (is_correct_figure(field, buffer, cur_sym + 1, figure) != 1)
-            return 0;
+            return -1;
 
         switch (buffer[cur_sym])
         {
         case 'N':
-            if (!(move_knight(field, buffer, cur_sym)))
-                return 0;
+            if (move_knight(field, buffer, cur_sym) == -1)
+                return -1;
             break;
         case 'B':
-            if (!(move_bishop(field, buffer, cur_sym)))
-                return 0;
+            if (move_bishop(field, buffer, cur_sym) == -1)
+                return -1;
             break;
         case 'Q':
-            if (!(move_queen(field, buffer, cur_sym)))
-                return 0;
+            if (move_queen(field, buffer, cur_sym) == -1)
+                return -1;
             break;
         case 'R':
-            if (!(move_rock(field, buffer, cur_sym)))
-                return 0;
+            if (move_rock(field, buffer, cur_sym) == -1)
+                return -1;
             break;
         case 'K':
-            if (!(move_king(field, buffer, cur_sym)))
-                return 0;
+            if (move_king(field, buffer, cur_sym) == -1)
+                return -1;
             break;
         case 'P':
             break;
