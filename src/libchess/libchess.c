@@ -7,7 +7,12 @@ int current_move = 1;
 
 void create_field(char field[][WIDTH])
 {
-    FILE *figures = fopen("figures.txt", "r");
+    FILE *figures;
+    if ((figures = fopen("figures.txt", "r")) == NULL)
+    {
+        puts("cringe");
+        exit(1);
+    }
     for (int i = 0; i < LENGTH; i++)
     {
         for (int j = 0; j < WIDTH; j++)
@@ -45,39 +50,14 @@ void show_field(char field[][WIDTH])
     puts("");
 }
 
-void move(char buffer[])
-{
-    FILE *moves = fopen("moves.txt", "w");
-    printf("Введите ход(пр. e2-e4 e7-e5)\n");
-    printf("%d. ", current_move);
-    int i = 0;
-    while ((buffer[i] = getchar()) != '\n')
-    {
-        i++;
-    }
-    if (i > strlen(buffer) - 1)
-    {
-        printf("Неккоректные данные\n");
-        return;
-    }
-    buffer[i + 1] = '\0';
-    fputs(buffer, moves);
-    fclose(moves);
-}
-
-int move_proccess(char buffer[])
+int move_proccess(char field[][WIDTH])
 {
     int white_turn = 0;
-    int cur_sym = white_turn;
-    FILE *moves;
-    if ((moves = fopen("moves.txt", "r")) == NULL)
-    {
-        printf("Не удалось открыть файл");
-        return 0;
-    }
-    fgets(buffer, 16, moves);
-    fclose(moves);
-
+    int cur_sym = 0;
+    char buffer[20];
+    printf("Введите ход(пр. e2-e4 e7-e5)\nRh1-h3\n");
+    printf("%d. ", current_move);
+    fgets(buffer, 20, stdin); // 20 bord of buffer
     int i = 0;
     while (i < 2)
     {
@@ -97,7 +77,6 @@ int move_proccess(char buffer[])
         }
         else
         {
-
             if (type_of_figure(field, cur_sym, buffer, 0) == 0)
                 return 0;
         }
@@ -175,7 +154,7 @@ int is_correct_figure(char field[][WIDTH], char buffer[], int cur_sym, char figu
     }
 }
 
-void move_pawn(char field[][WIDTH], char buffer[], int cur_sym)
+int move_pawn(char field[][WIDTH], char buffer[], int cur_sym)
 {
     static int white_pawns_first_move[WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
     static int black_pawns_first_move[WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -198,7 +177,7 @@ void move_pawn(char field[][WIDTH], char buffer[], int cur_sym)
         else
         {
             puts("Ошибка");
-            return;
+            return 0;
         }
     }
     else if (figure == 'p')
@@ -217,12 +196,13 @@ void move_pawn(char field[][WIDTH], char buffer[], int cur_sym)
         else
         {
             puts("Ошибка");
-            return;
+            return 0;
         }
     }
+    return 1;
 }
 
-void move_knight(char field[][WIDTH], char buffer[], int cur_sym)
+int move_knight(char field[][WIDTH], char buffer[], int cur_sym)
 {
     cur_sym++;
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
@@ -236,45 +216,199 @@ void move_knight(char field[][WIDTH], char buffer[], int cur_sym)
     else
     {
         printf("Некорректный ход");
+        return 0;
     }
+    return 1;
 }
 
-void move_bishop(char field[][WIDTH], char buffer[], int cur_sym)
+int move_bishop(char field[][WIDTH], char buffer[], int cur_sym)
 {
-    cur_sym++;
+    cur_sym++; // cur sym = 1
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
 
-    if (abs_num == abs_let)
+    if (abs_num == abs_let) // обработка возможности хода
     {
+        //пр Bc1-f5
+        int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
+        int direction_let = letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]);
+
+        if (direction_let > 0 && direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let > 0 && direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0 && direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0 && direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
         field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
     else
     {
         printf("Некорректный ход");
+        return 0;
     }
+    return 1;
 }
 
-void move_queen(char field[][WIDTH], char buffer[], int cur_sym)
+int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
 {
     cur_sym++;
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
-    if ((abs_num == abs_let) || (abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0))
+
+    int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
+    int direction_let = letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]);
+    if (abs_num == abs_let) //bishop
     {
-        field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
-        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+        if (direction_let > 0 && direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let > 0 && direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0 && direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0 && direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("Ошибка на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+    }else if((abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0)){ //rock
+        if (direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym])] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym])] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let > 0)
+        {
+            for (int i = 1; i <= abs_let; i++)
+            {
+                if (field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0)
+        {
+            for (int i = 1; i <= abs_let; i++)
+            {
+                if (field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+    }
+    else if (abs_num <= 1 && abs_let <= 1) //king
+    {
+        if (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' ')
+        {
+            puts("Ошибка на пути фигуры");
+            return -1;
+        }
     }
     else
     {
         printf("Некорректный ход");
+        return 0;
     }
+    field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
+    field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+    return 1;
 }
 
-void move_king(char field[][WIDTH], char buffer[], int cur_sym)
+int move_king(char field[][WIDTH], char buffer[], int cur_sym)
 {
     cur_sym++;
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
@@ -282,16 +416,23 @@ void move_king(char field[][WIDTH], char buffer[], int cur_sym)
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
     if (abs_num <= 1 && abs_let <= 1)
     {
+        if (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' ')
+        {
+            puts("Ошибка на пути фигуры");
+            return -1;
+        }
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
-        field[number(buffer[cur_sym + 5])][letter(buffer[cur_sym + 4])] = figure;
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
     else
     {
         printf("Некорректный ход");
+        return -1;
     }
+    return 1;
 }
 
-void move_rock(char field[][WIDTH], char buffer[], int cur_sym)
+int move_rock(char field[][WIDTH], char buffer[], int cur_sym)
 {
     cur_sym++;
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
@@ -299,13 +440,61 @@ void move_rock(char field[][WIDTH], char buffer[], int cur_sym)
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
     if ((abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0))
     {
+        int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
+        int direction_let = letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]);
+        if (direction_num > 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) + i][letter(buffer[cur_sym])] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_num < 0)
+        {
+            for (int i = 1; i <= abs_num; i++)
+            {
+                if (field[number(buffer[cur_sym + 1]) - i][letter(buffer[cur_sym])] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let > 0)
+        {
+            for (int i = 1; i <= abs_let; i++)
+            {
+                if (field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym]) + i] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
+        else if (direction_let < 0)
+        {
+            for (int i = 1; i <= abs_let; i++)
+            {
+                if (field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym]) - i] != ' ')
+                {
+                    puts("на пути фигуры");
+                    return -1;
+                }
+            }
+        }
         field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
-        field[number(buffer[cur_sym + 5])][letter(buffer[cur_sym + 4])] = figure;
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
     }
     else
     {
         printf("Некорректный ход");
+        return -1;
     }
+    return 1;
 }
 
 int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn)
@@ -323,34 +512,40 @@ int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn)
         switch (buffer[cur_sym])
         {
         case 'N':
-            move_knight(field, buffer, cur_sym);
+            if (!(move_knight(field, buffer, cur_sym)))
+                return 0;
             break;
         case 'B':
-            move_bishop(field, buffer, cur_sym);
+            if (!(move_bishop(field, buffer, cur_sym)))
+                return 0;
             break;
         case 'Q':
-            move_queen(field, buffer, cur_sym);
+            if (!(move_queen(field, buffer, cur_sym)))
+                return 0;
             break;
         case 'R':
-            move_rock(field, buffer, cur_sym);
+            if (!(move_rock(field, buffer, cur_sym)))
+                return 0;
             break;
         case 'K':
-            move_king(field, buffer, cur_sym);
+            if (!(move_king(field, buffer, cur_sym)))
+                return 0;
             break;
         case 'P':
             break;
 
         default:
             printf("Фигура отсутствует\n");
-            break;
+            return -1;
         }
     }
     return 1;
 }
-
+// turn status 1 = need backend
+// turn status 0 = no need backend
 void backend_field(char field[][WIDTH], char backend[][WIDTH], int turn_status)
 {
-    if (turn_status == 0)
+    if (turn_status == 1)
     {
         field = backend;
     }

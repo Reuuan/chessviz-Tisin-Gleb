@@ -1,1 +1,6 @@
-main.c
+*.c
+*.o
+*.a
+!chess.c
+!libchess.c
+!chess.c
