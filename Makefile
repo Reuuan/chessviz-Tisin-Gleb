@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -I src
+CFLAGS = -Wall -Werror -I src -g -O0
 СС = gcc 
 SRC_DIR = src
 OBJ_DIR = obj
