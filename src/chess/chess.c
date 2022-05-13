@@ -3,17 +3,22 @@
 int main()
 {
     char field[LENGTH][WIDTH];
-    char backend[LENGTH][WIDTH];
+    char backup[LENGTH][WIDTH];
     create_field(field);
-    create_field(backend);
+    create_field(backup);
     show_field(field);
+
     while (1)
     {
-        if (move_proccess(field) == 1)
+        if (move_proccess(field) == -1)
         {
-            backend_field(field, backend, 0);
-        }else{
-            backend_field(field, backend, 1);
+            backup_field(field, backup, 1);
+            puts("рестарт до хода белых");
+            show_field(field);    
+        }
+        else
+        {
+            backup_field(field, backup, 1);
         }
         show_field(field);
     }

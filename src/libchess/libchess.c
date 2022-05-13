@@ -4,6 +4,7 @@
 #include <libchess/libchess.h>
 
 int current_move = 1;
+int check_status = 0;
 
 void clear (void)
 {    
@@ -57,7 +58,6 @@ void show_field(char field[][WIDTH])
 
 int move_proccess(char field[][WIDTH])
 {
-    //FILE *list_of_moves = fopen ("moves.txt","w");
     int cur_sym = 0;
     int shift = 0;
     int i = 0;
@@ -67,8 +67,6 @@ int move_proccess(char field[][WIDTH])
     {
         printf("Введите ход(пр. e2-e4)\n");
         printf("%d. ", current_move);
-        // fscanf("");
-        // fprintf(list_of_moves, "%s", buffer);
         int j = 0;
         while((ch = getchar()) != '\n')
         {
@@ -90,7 +88,7 @@ int move_proccess(char field[][WIDTH])
 
         if (i == 1)
         {
-            if (!isupper(field[number(buffer[shift+1])][letter(buffer[shift])]))
+            if (!isupper(field[number(buffer[shift])][letter(buffer[shift+1])]))
             {
                 puts("Ошибка: Ход белых");
                 return -1;
@@ -98,7 +96,7 @@ int move_proccess(char field[][WIDTH])
         }
         else if (i == 2)
         {
-            if (!islower(field[number(buffer[shift+1])][letter(buffer[shift])]))
+            if (!islower(field[number(buffer[shift])][letter(buffer[shift+1])]))
             {
                 puts("Ошибка: Ход черных");
                 return -1;
@@ -107,14 +105,16 @@ int move_proccess(char field[][WIDTH])
         
         if (is_pawn(field, buffer, cur_sym) == 1)
         {
-            if (type_of_figure(field, cur_sym, buffer, 'P') == 0)
-                return 0;
+            if (type_of_figure(field, cur_sym, buffer, 'P', check_status) == 0)
+                return -1;
         }
         else
         {
-            if (type_of_figure(field, cur_sym, buffer, 0) == 0)
-                return 0;
+            if (type_of_figure(field, cur_sym, buffer, 0, check_status) == 0)
+                return -1;
         }
+        if ((shift+5) == '+') check(field, buffer, shift);
+        show_field(field);
     }
     current_move++;
     return 1;
@@ -124,8 +124,8 @@ int move_proccess(char field[][WIDTH])
 int type_of_move(char field[][WIDTH], char buffer[], int cur_sym)
 {  
 
-    if (islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) ^ \
-        islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])])   )
+    if (!(islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) == \
+        islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])]))   )
     {
         puts("Ошибка");
         return 0;
@@ -161,6 +161,14 @@ int proccess_type_of_move(char field[][WIDTH], int cur_sym, char buffer[])
         puts("Неккоректный ввод взятия");
         return -1;
     }
+    return 1;
+}
+
+int check(char field[][WIDTH], char buffer[], char cur_sym)
+{   
+    if (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym +3])] != 'K' || \
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym +3])] != 'k' ) return -1;
+    check_status = 1;
     return 1;
 }
 
@@ -528,6 +536,7 @@ int move_king(char field[][WIDTH], char buffer[], int cur_sym)
         printf("Некорректный ход");
         return -1;
     }
+    check_status = 0; //global
     return 1;
 }
 
@@ -600,8 +609,12 @@ int move_rock(char field[][WIDTH], char buffer[], int cur_sym)
     return 1;
 }
 
-int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn)
+int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn, int check_status)
 {
+    if (check_status){
+        if(!move_king(field, buffer, cur_sym)) return -1;
+        return 1;
+    }
     char figure = buffer[cur_sym];
     if (pawn == 'P')
     {
@@ -646,14 +659,14 @@ int type_of_figure(char field[][WIDTH], int cur_sym, char buffer[], char pawn)
 }
 // turn status 1 = need backend
 // turn status 0 = no need backend
-void backend_field(char field[][WIDTH], char backend[][WIDTH], int turn_status)
+void backup_field(char field[][WIDTH], char backup[][WIDTH], int turn_status)
 {
     if (turn_status == 1)
     {
-        field = backend;
+        field = backup;
     }
     else
     {
-        backend = field;
+        backup = field;
     }
 }
