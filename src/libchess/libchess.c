@@ -82,13 +82,11 @@ int move_proccess(char field[][WIDTH])
         buffer[j + 1] = '\0';
         i++;
 
-        if (field[number(buffer[cur_sym])][letter(buffer[cur_sym+1])] >= 'A' && \
-                field[number(buffer[cur_sym])][letter(buffer[cur_sym+1])] <= 'H')
-                    shift = 1;
+        if (buffer[cur_sym] >= 'A' && buffer[cur_sym] <= 'Z') shift = 1;
 
         if (i == 1)
         {
-            if (!isupper(field[number(buffer[shift])][letter(buffer[shift+1])]))
+            if (!isupper(field[number(buffer[shift+1])][letter(buffer[shift])]))
             {
                 puts("Ошибка: Ход белых");
                 return -1;
@@ -96,7 +94,7 @@ int move_proccess(char field[][WIDTH])
         }
         else if (i == 2)
         {
-            if (!islower(field[number(buffer[shift])][letter(buffer[shift+1])]))
+            if (!islower(field[number(buffer[shift+1])][letter(buffer[shift])]))
             {
                 puts("Ошибка: Ход черных");
                 return -1;
@@ -123,17 +121,14 @@ int move_proccess(char field[][WIDTH])
 // 2 - silence move; 1 - with attack; 0 mistake
 int type_of_move(char field[][WIDTH], char buffer[], int cur_sym)
 {  
-
-    if (!(islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) == \
-        islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])]))   )
-    {
-        puts("Ошибка");
-        return 0;
-    }
-    
-
     if (buffer[cur_sym + 2] == 'x')
     {
+        if (!(islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) == \
+        islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])]))   )
+        {
+            puts("Ошибка");
+            return 0;
+        }
         return 1;
     }
     else if (buffer[cur_sym + 2] == '-')
@@ -146,17 +141,18 @@ int type_of_move(char field[][WIDTH], char buffer[], int cur_sym)
 
 int proccess_type_of_move(char field[][WIDTH], int cur_sym, char buffer[])
 {
-    if (type_of_move(field, buffer, cur_sym) == 1 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] == ' '))
+    int i = type_of_move(field, buffer, cur_sym);
+    if (i == 1 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] == ' '))
     {
         puts("Ошибка: Ход с атакой, но нет взятия");
         return -1;
     }
-    else if (type_of_move(field, buffer, cur_sym) == 2 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' '))
+    else if (i == 2 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' '))
     {
         puts("Ошибка: Тихий ход, но есть взятие");
         return -1;
     }
-    else if (type_of_move(field, buffer, cur_sym) == 0)
+    else if (i == 0)
     {
         puts("Неккоректный ввод взятия");
         return -1;
