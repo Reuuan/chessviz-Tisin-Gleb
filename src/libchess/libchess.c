@@ -1,7 +1,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libchess/libchess.h>
+#include <libchess.h>
 
 int current_move = 1;
 int check_status = 0;
@@ -60,11 +60,11 @@ void show_field(char field[][WIDTH])
 
 int move_proccess(char field[][WIDTH])
 {
+    char buffer[12];
     int cur_sym = 0;
     int shift = 0;
     int i = 0;
     char ch;
-    char buffer[13];
     while (i < 2)
     {
         printf("Введите ход(пр. e2-e4)\n");
@@ -83,6 +83,14 @@ int move_proccess(char field[][WIDTH])
         }
         buffer[j + 1] = '\0';
         i++;
+        if(buffer[0] == '#') exit(1);
+
+        if ((shift + 5) == '#')
+            checkmate(field, buffer, shift);
+
+        if (buffer[cur_sym] >= 'A' && buffer[cur_sym] <= 'Z')
+            shift = 1;
+    
         if(buffer[0] == '#') exit(1);
 
         if ((shift + 5) == '#')
@@ -110,16 +118,17 @@ int move_proccess(char field[][WIDTH])
 
         if (is_pawn(field, buffer, cur_sym) == 1)
         {
-            if (type_of_figure(field, cur_sym, buffer, 'P') == 0)
+            if (type_of_figure(field, cur_sym, buffer, 'P') == -1)
                 return -1;
         }
         else
         {
-            if (type_of_figure(field, cur_sym, buffer, 0) == 0)
+            if (type_of_figure(field, cur_sym, buffer, 0) == -1)
                 return -1;
         }
-        if ((shift + 5) == '+')
+        if ((shift + 5) == '+'){
             check(field, buffer, shift);
+        }
         show_field(field);
     }
     current_move++;
@@ -132,7 +141,8 @@ int type_of_move(char field[][WIDTH], char buffer[], int cur_sym)
     if (buffer[cur_sym + 2] == 'x')
     {
         if (!(islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) ==
-              islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])])))
+              islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])])) ||\
+              field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] == ' ')
         {
             puts("Ошибка");
             return 0;
@@ -198,7 +208,7 @@ int is_pawn(char field[][WIDTH], char buffer[], int cur_sym)
     return -1;
 }
 
-int is_right_field_range(char field[][WIDTH], char buffer[], int cur_sym)
+int is_right_field_range(char buffer[], int cur_sym)
 {
     if (number(buffer[cur_sym + 4]) >= LENGTH || letter(buffer[cur_sym + 3]) >= WIDTH)
     {

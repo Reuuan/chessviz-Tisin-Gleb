@@ -1,34 +1,63 @@
-CFLAGS = -Wall -Werror -I src -g -O0
-СС = gcc 
-SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
+CC = gcc
+
 APP_NAME = chess
 LIB_NAME = libchess
+TEST_NAME = test
 
-APP_PATH = $(SRC_DIR)/$(APP_NAME)
-LIB_PATH = $(SRC_DIR)/$(LIB_NAME)
-OBJ_APP_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(APP_NAME)
-OBJ_LIB_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)
+CFLAGS = -Wall -Werror -g
+CPPFLAGS = -I src/libchess -MP -MMD
+CPPFLAGST = -I thirdparty -MP -MMD
 
-all: $(APP_NAME)
+BIN_DIR = bin
+OBJ_DIR = obj
+SRC_DIR = src
+TEST_DIR = test
 
-$(APP_NAME): $(APP_NAME).o $(LIB_NAME).a
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/$(APP_NAME) $(OBJ_APP_PATH)/$(APP_NAME).o $(OBJ_LIB_PATH)/$(LIB_NAME).a -lm
+APP_PATH = $(BIN_DIR)/$(APP_NAME)
+TEST_PATH = $(BIN_DIR)/$(TEST_NAME)
+LIB_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)/$(LIB_NAME).a
 
-$(APP_NAME).o:
-	$(CC) -c $(CFLAGS) -o $(OBJ_APP_PATH)/$@ $(APP_PATH)/*.c
+SRC_EXT = c
 
-$(LIB_NAME).a:
-	$(CC) -c $(CFLAGS) -o $(OBJ_LIB_PATH)/$@ $(LIB_PATH)/*.c
+APP_SOURCES = $(shell find $(SRC_DIR)/$(APP_NAME) -name '*.$(SRC_EXT)')
+APP_OBJECTS = $(APP_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-run:
+TEST_SOURCES = $(shell find $(TEST_DIR) -name '*.$(SRC_EXT)')
+TEST_OBJECTS = $(TEST_SOURCES:$(TEST_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(TEST_DIR)/%.o)
+
+LIB_SOURCES = $(shell find $(SRC_DIR)/$(LIB_NAME) -name '*.$(SRC_EXT)')
+LIB_OBJECTS = $(LIB_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
+
+DEPS = $(APP_OBJECTS:.o=.d) $(LIB_OBJECTS:.o=.d)
+
+.PHONY: all
+all: $(APP_PATH)
+
+-include $(DEPS)
+
+$(APP_PATH): $(APP_OBJECTS) $(LIB_PATH)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@ -lm -g
+
+$(LIB_PATH): $(LIB_OBJECTS)
+	ar rcs $@ $^
+
+$(OBJ_DIR)/%.o: %.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CPPFLAGST) $< -o $@
+
+.PHONY: clean run
+run: 
 	./$(BIN_DIR)/$(APP_NAME)
-
-.PHONY: clean
-
 clean:
-	rm $(BIN_DIR)/$(APP_NAME)
-	rm $(OBJ_APP_PATH)/*.o
-	rm $(OBJ_LIB_PATH)/*.a
+	$(RM) $(APP_PATH) $(LIB_PATH)
+	find $(OBJ_DIR) -name '*.o' -exec $(RM) '{}' \;
+	find $(OBJ_DIR) -name '*.d' -exec $(RM) '{}' \;
+
+.PHONY: test
+test: $(TEST_PATH)
+	./$(BIN_DIR)/$(TEST_NAME)
+
+-include $(DEPS)
+
+$(TEST_PATH): $(TEST_OBJECTS) $(LIB_PATH)
+	$(CC) $(CFLAGS) $(CPPFLAGST) $^ -o $@ -lm $(LDFLAGS) $(LDLIBS)
 
