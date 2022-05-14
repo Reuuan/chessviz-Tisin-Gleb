@@ -73,7 +73,7 @@ int move_proccess(char field[][WIDTH])
         while ((ch = getchar()) != '\n')
         {
             buffer[j] = ch;
-            if (j > 7)
+            if (j > 9)
             {
                 clear();
                 j = 0;
@@ -164,7 +164,8 @@ int proccess_type_of_move(char field[][WIDTH], int cur_sym, char buffer[])
     {
         puts("Ошибка: Ход с атакой, но нет взятия");
         return -1;
-    }
+    }else if (i==1) return 2;
+
     else if (i == 2 && (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' '))
     {
         puts("Ошибка: Тихий ход, но есть взятие");
@@ -175,6 +176,7 @@ int proccess_type_of_move(char field[][WIDTH], int cur_sym, char buffer[])
         puts("Неккоректный ввод взятия");
         return -1;
     }
+
     return 1;
 }
 
@@ -322,6 +324,13 @@ int move_knight(char field[][WIDTH], char buffer[], int cur_sym)
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
+
+    if(proccess_type_of_move(field, cur_sym, buffer) == 2){
+        field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+        return 1;
+    }
+
     if ((abs_let == 2 && abs_num == 1) || (abs_let == 1 && abs_num == 2))
     {
         if (proccess_type_of_move(field, cur_sym, buffer) == -1)
@@ -343,6 +352,12 @@ int move_bishop(char field[][WIDTH], char buffer[], int cur_sym)
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
+
+    if(proccess_type_of_move(field, cur_sym, buffer) == 2){
+        field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+        return 1;
+    }
 
     if (abs_num == abs_let) // обработка возможности хода
     {
@@ -418,6 +433,12 @@ int move_queen(char field[][WIDTH], char buffer[], int cur_sym)
 
     int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
     int direction_let = letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]);
+
+    if(proccess_type_of_move(field, cur_sym, buffer) == 2){
+        field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+        return 1;
+    }
 
     if (abs_num == abs_let) // bishop
     {
@@ -541,6 +562,13 @@ int move_king(char field[][WIDTH], char buffer[], int cur_sym)
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
+
+    if(proccess_type_of_move(field, cur_sym, buffer) == 2){
+        field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])] = ' ';
+        field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] = figure;
+        return 1;
+    }
+
     if (abs_num <= 1 && abs_let <= 1)
     {
         if (field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] != ' ')
@@ -570,6 +598,7 @@ int move_rock(char field[][WIDTH], char buffer[], int cur_sym)
     int abs_num = abs(number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]));
     int abs_let = abs(letter(buffer[cur_sym + 3]) - letter(buffer[cur_sym]));
     char figure = field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])];
+
     if ((abs_num == 0 && abs_let != 0) || (abs_num != 0 && abs_let == 0))
     {
         int direction_num = number(buffer[cur_sym + 4]) - number(buffer[cur_sym + 1]);
