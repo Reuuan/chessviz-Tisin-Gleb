@@ -1,6 +1,7 @@
-*.c
 *.o
 *.a
 !chess.c
 !libchess.c
 !chess.c
+!test.c
+!main.c

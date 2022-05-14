@@ -1,4 +1,4 @@
-#include <libchess/libchess.h>
+#include <libchess.h>
 
 int main()
 {
@@ -18,8 +18,7 @@ int main()
         }
         else
         {
-            backup_field(field, backup, 1);
+            backup_field(field, backup, 0);
         }
-        show_field(field);
     }
 }

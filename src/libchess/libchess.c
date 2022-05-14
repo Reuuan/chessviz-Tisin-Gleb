@@ -1,7 +1,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libchess/libchess.h>
+#include <libchess.h>
 
 int current_move = 1;
 int check_status = 0;
@@ -132,7 +132,8 @@ int type_of_move(char field[][WIDTH], char buffer[], int cur_sym)
     if (buffer[cur_sym + 2] == 'x')
     {
         if (!(islower(field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])]) ==
-              islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])])))
+              islower(field[number(buffer[cur_sym + 1])][letter(buffer[cur_sym])])) ||\
+              field[number(buffer[cur_sym + 4])][letter(buffer[cur_sym + 3])] == ' ')
         {
             puts("Ошибка");
             return 0;
@@ -198,7 +199,7 @@ int is_pawn(char field[][WIDTH], char buffer[], int cur_sym)
     return -1;
 }
 
-int is_right_field_range(char field[][WIDTH], char buffer[], int cur_sym)
+int is_right_field_range(char buffer[], int cur_sym)
 {
     if (number(buffer[cur_sym + 4]) >= LENGTH || letter(buffer[cur_sym + 3]) >= WIDTH)
     {
